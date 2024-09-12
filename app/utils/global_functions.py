@@ -10,12 +10,6 @@ class GlobalFunctions:
         return "." in filename and filename.rsplit(".", 1)[1].lower() in extensions
 
     @staticmethod
-    def generate_temporary_password(length: int):
-        alphabet = string.ascii_letters + string.digits
-        temp_password = ''.join(secrets.choice(alphabet) for _ in range(length))
-        return temp_password
-
-    @staticmethod
     def get_exception_details(key: str, custom_detail: str = None):
         exceptions = {
             "401": (status.HTTP_401_UNAUTHORIZED, "Token not available"),

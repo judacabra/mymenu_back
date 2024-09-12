@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     NAME_USER: str
     USERNAME_USER: str
     EMAIL_USER: str
+    TEMP_PASS: str
     LENGTH_TEMP_PASS: int
 
     class Config:

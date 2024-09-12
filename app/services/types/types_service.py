@@ -4,8 +4,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.models import Type
 
-import os
-
 
 class TypeService:
 

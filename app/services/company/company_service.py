@@ -8,6 +8,30 @@ class CompanyService:
     def __init__(self, db: Session):
         self.db = db
 
+    def consult_company_db(self):
+        try:
+            db_company = self.db.query(Company)
+        
+            if db_company:
+                return [
+                    {
+                        "id": company.id,
+                        "name": company.name,
+                        "nit": company.nit,
+                        "description": company.description,
+                        "address": company.address,
+                        "img": company.img,
+                        "active": company.active,
+                    }
+                    for company in db_company
+                ]
+
+        except SQLAlchemyError as e:
+            print(f"Error getting Company: {e}")
+            self.db.rollback()
+            return False
+        
+
     def register_company_db(self, company: dict):
         try:
             self.db.add(company)

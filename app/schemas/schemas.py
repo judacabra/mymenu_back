@@ -63,6 +63,7 @@ class ProductCreate(BaseModel):
     recommended : str
     img : str
     price : int
+    stock: int
 
 
 class ProductUpdate(BaseModel):
@@ -72,6 +73,8 @@ class ProductUpdate(BaseModel):
     recommended : Optional[str] = None
     img : Optional[str] = None
     price : Optional[int] = None
+    stock: Optional[int] = None
+
 
 
 class PermissionCreate(BaseModel):

@@ -248,8 +248,7 @@ class DBInitializer:
 
     def create_initial_user(self):
         try:
-            temporary_password = GlobalFunctions.generate_temporary_password(self.settings.LENGTH_TEMP_PASS)
-            hashed_password = AuthService(db=self.db).hash_password(temporary_password)
+            hashed_password = AuthService(db=self.db).hash_password(self.settings.TEMP_PASS)
 
             profile = self.db.query(Profile.id).first()
             if profile is None:
@@ -274,8 +273,6 @@ class DBInitializer:
 
             user_db = User(**initial_user.model_dump())
             UserService(db=self.db).register_user_db(user_db)
-
-            return temporary_password
         except Exception as e:
             self.db.rollback()
             print(f"Error trying to add the initial user: {e}")
