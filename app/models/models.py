@@ -73,6 +73,7 @@ class Product(Base):
     recommended = Column(String, default="NO", nullable=False)
     img = Column(String, nullable=False)
     price = Column(BigInteger, nullable=False)
+    stock = Column(BigInteger, nullable=False)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     type = relationship("Type", back_populates="product")

@@ -26,7 +26,7 @@ class AuthService:
             if not user:
                 return {"message": "User not found", "active": False, "password": None, "username": None}
 
-            if not user.is_active:
+            if not user.active:
                 return {"message": "User is not active", "active": False, "password": None, "username": None}
 
             return {"message": "User found", "active": True, "password": user.password, "username": user.username, "id": user.id}
