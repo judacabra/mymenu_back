@@ -14,7 +14,7 @@ router = APIRouter()
 async def type_home(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
 ):
-    """Función utilizada para consultar la lista de opciones de tipo Home
+    """Función utilizada para consultar la lista de opciones de tipo Home.
 
     Args:
 
@@ -60,7 +60,7 @@ async def type_menu(
 async def type_menu(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
 ):
-    """Función utilizada para consultar la lista de opciones de tipo Menu.
+    """Función utilizada para consultar la lista de opciones de tipo Menu recomendado.
 
     Args:
 

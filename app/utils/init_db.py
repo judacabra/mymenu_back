@@ -1,17 +1,16 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models.models import Company, Contact, View, Type, Permission, Profile, User 
+from app.models.models import Company, Contact, View, Type, Permission, Profile, User, ProfilePermission
 
-from app.schemas.schemas import UserCreate, ProfileCreate, CompanyCreate, ContactCreate, ViewCreate, TypeCreate
+from app.schemas.schemas import UserCreate, ProfileCreate, CompanyCreate, ContactCreate, ViewCreate, TypeCreate, ProfilePermissionManagment
 
-from app.services.types.types_service import TypeService
 from app.utils.config import get_settings
-from app.utils.global_functions import GlobalFunctions
 
 from app.services.user.auth_service import AuthService
 from app.services.user.user_service import UserService
 from app.services.views.views_service import ViewsService
+from app.services.types.types_service import TypeService
 from app.services.profile.profile_service import ProfileService
 from app.services.company.company_service import CompanyService
 from app.services.contact.contact_service import ContactService
@@ -37,12 +36,13 @@ class DBInitializer:
                 self.create_initial_permissions()
             if not self.check_profiles():
                 self.create_initial_profiles()
+            if not self.check_profiles_permissions():
+                self.create_initial_profiles_permissions()
             if not self.check_users():
                 self.create_initial_user()
         except Exception as e:
             print(f"Error initializing database: {e}")
             raise
-
 
     def check_company(self) -> bool:
         company_count = self.db.query(Company).count()
@@ -67,6 +67,10 @@ class DBInitializer:
     def check_profiles(self) -> bool:
         profile_count = self.db.query(Profile).count()
         return profile_count > 0
+    
+    def check_profiles_permissions(self) -> bool:
+        permissions_count = self.db.query(ProfilePermission).count()
+        return permissions_count > 0
     
     def check_users(self) -> bool:
         user_count = self.db.query(User).count()
@@ -182,29 +186,29 @@ class DBInitializer:
             initial_permission = [
                 Permission(
                     id=1,
-                    name="Profile",
-                    description="Profile Parameter"
+                    name="Dashboard",
+                    description="Dashboard Parameter"
                 ),
                 Permission(
                     id=2,
-                    name="User",
+                    name="Usuarios",
                     description="User Parameter"
                 ),
                 Permission(
                     id=3,
-                    name="Product",
+                    name="Productos",
                     description="Product Parameter"
                 ),
                 Permission(
                     id=4,
-                    name="Company",
-                    description="Company Parameter"
+                    name="Empresas",
+                    description="Companys Parameter"
                 ),
                 Permission(
                     id=5,
-                    name="Type",
-                    description="Type Parameter"
-                )
+                    name="Perfiles",
+                    description="Profile Parameter"
+                ),
             ]
 
             added_permissions = []
@@ -233,9 +237,8 @@ class DBInitializer:
     def create_initial_profiles(self):
         try:
             initial_profile = ProfileCreate(
-                name="Admin Profile",
-                description="Admin Profile",
-                id_permission=1
+                name="Super Admin Profile",
+                description="Super Admin Profile",
             )
 
             profile_db = Profile(**initial_profile.model_dump())
@@ -245,6 +248,43 @@ class DBInitializer:
         except Exception as e:
             self.db.rollback()
             print(f"Error trying to add the profile: {e}")
+
+    def create_initial_profiles_permissions(self):
+        try:
+            initial_profiles_permissions = [
+                ProfilePermissionManagment(
+                    id_profile=1,
+                    id_permission=1,
+                ),
+                ProfilePermissionManagment(
+                    id_profile=1,
+                    id_permission=2,
+                ),
+                ProfilePermissionManagment(
+                    id_profile=1,
+                    id_permission=3,
+                ),
+                ProfilePermissionManagment(
+                    id_profile=1,
+                    id_permission=4,
+                ),
+                ProfilePermissionManagment(
+                    id_profile=1,
+                    id_permission=5,
+                ),
+            ]
+
+            added_profiles_permissions = []
+            for data in initial_profiles_permissions:
+                profiles_permissions_db = ProfilePermission(**data.model_dump())  
+                result = ProfileService(db=self.db).register_profile_permission_db(profiles_permissions_db)
+                if result:
+                    added_profiles_permissions.append(result)
+            
+            return added_profiles_permissions
+        except Exception as e:
+            self.db.rollback()
+            print(f"Error trying to add the profiles permissions: {e}")
 
     def create_initial_user(self):
         try:

@@ -24,6 +24,7 @@ def login(
     """
 
     user = AuthService(db).authenticate_user(username=form_data.username, password=form_data.password)
+
     if user["message"] != "User found":
         global_functions.get_exception_details("401", custom_detail="Invalid credentials")
 

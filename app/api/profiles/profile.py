@@ -4,15 +4,15 @@ from typing import List, Dict, Any
 from app.utils.conn import db_manager 
 from app.utils.global_functions import global_functions
 
-from app.services.products.products_service import ProductService
+from app.services.profile.profile_service import ProfileService
 
 router = APIRouter()
 
-@router.get("/products")
-async def products(
+@router.get("/profiles")
+async def profiles(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
 ):
-    """Función utilizada para consultar la lista de productos.
+    """Función utilizada para consultar la lista de perfiles.
 
     Args:
 
@@ -20,10 +20,10 @@ async def products(
 
     Returns:
 
-        dict: Retorna un diccionario con la información de los productos.
+        dict: Retorna un diccionario con la información de los perfiles.
     """
     
-    results = ProductService(db).consult_product_db()
+    results = ProfileService(db).consult_profiles_db()
 
     if not results:
         global_functions.get_exception_details("404", custom_detail="No products found.")

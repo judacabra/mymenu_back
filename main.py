@@ -4,7 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth.auth import router as routerAuth 
 from app.api.company.company import router as routerCompany 
 from app.api.products.product import router as routerProduct
+from app.api.profiles.profile import router as routerProfile
 from app.api.types.type import router as routerTypes 
+from app.api.users.user import router as routerUsers 
 
 from app.models.models import Base
 from app.utils.conn import db_manager
@@ -31,7 +33,9 @@ app.add_middleware(
 app.include_router(routerAuth,  tags=["Auth"])
 app.include_router(routerCompany,  tags=["Company"])
 app.include_router(routerProduct,  tags=["Products"])
+app.include_router(routerProfile,  tags=["Profiles"])
 app.include_router(routerTypes,  tags=["Types"])
+app.include_router(routerUsers,  tags=["Users"])
 
 db_initializer = DBInitializer(db_manager.session_local())
 

@@ -1,9 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
-
-
-class RecoverPassword(BaseModel):
-    email: EmailStr
 
 
 class CompanyCreate(BaseModel):
@@ -76,7 +72,6 @@ class ProductUpdate(BaseModel):
     stock: Optional[int] = None
 
 
-
 class PermissionCreate(BaseModel):
     name : str
     description : str
@@ -90,13 +85,17 @@ class PermissionUpdate(BaseModel):
 class ProfileCreate(BaseModel):
     name : str
     description : Optional[str] = None
-    id_permission : int
 
 
 class ProfileUpdate(BaseModel):
     name : Optional[str] = None
     description : Optional[str] = None
-    id_permission : Optional[int] = None
+
+
+class ProfilePermissionManagment(BaseModel):
+    id_profile: int
+    id_permission: int
+
 
 class UserCreate(BaseModel):
     name : str

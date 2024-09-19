@@ -6,6 +6,7 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
+
 class Company(Base):
     __tablename__ = "company"
 
@@ -90,7 +91,7 @@ class Permission(Base):
     description = Column(String, nullable=False)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
-    profile = relationship("Profile", back_populates="permission")
+    profile_permissions = relationship("ProfilePermission", back_populates="permission")
 
 
 class Profile(Base):
@@ -99,15 +100,28 @@ class Profile(Base):
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
     description = Column(String)
-    id_permission = Column(BigInteger, ForeignKey("permission.id"), nullable=False)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
-    permission = relationship("Permission", back_populates="profile")
     user = relationship("User", back_populates="profile")
+    profile_permissions = relationship("ProfilePermission", back_populates="profile", cascade="all, delete")
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-    
+
+
+class ProfilePermission(Base):
+    __tablename__ = "profile_permission"
+
+    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id_profile = Column(BigInteger, ForeignKey("profile.id"), nullable=False)
+    id_permission = Column(BigInteger, ForeignKey("permission.id"), nullable=False)
+
+    profile = relationship("Profile", back_populates="profile_permissions")
+    permission = relationship("Permission", back_populates="profile_permissions")
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 class User(Base):
     __tablename__ = "user"
