@@ -29,7 +29,15 @@ class AuthService:
             if not user.active:
                 return {"message": "User is not active", "active": False, "password": None, "username": None}
 
-            return {"message": "User found", "active": True, "password": user.password, "username": user.username, "id": user.id}
+            return {
+                "message": "User found", 
+                "active": True, 
+                "id": user.id,
+                "password": user.password, 
+                "username": user.username, 
+                "company": user.company,
+                "profile": user.profile,
+                }
 
         except SQLAlchemyError as e:
             print(f"Error verifying user: {e}")

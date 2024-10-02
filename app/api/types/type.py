@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
-from app.utils import global_functions
+from app.utils.global_functions import global_functions
 from app.utils.config import get_settings
 from app.utils.conn import db_manager 
 
@@ -8,13 +8,15 @@ from app.services.types.types_service import TypeService
 
 settings = get_settings()
 
+COMPANY_ID = "ID Company"
+
 router = APIRouter()
 
 @router.get("/type/home")
 async def type_home(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
 ):
-    """Función utilizada para consultar la lista de opciones de tipo Home
+    """Función utilizada para consultar la lista de opciones de tipo Home.
 
     Args:
 
@@ -36,6 +38,7 @@ async def type_home(
 @router.get("/type/menu")
 async def type_menu(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
+    company_id: int = Query(None, title=COMPANY_ID, description="The ID of the user to consult"),
 ):
     """Función utilizada para consultar la lista de opciones de tipo Menu.
 
@@ -47,9 +50,9 @@ async def type_menu(
 
         dict: Retorna un diccionario con la información del tipo Menu.
     """
-    id = 2
+    id_view = 2
     notData = 'Recomendaciones'
-    results = TypeService(db).consult_type_db(id, None, notData)
+    results = TypeService(db).consult_type_db(id_view, company_id, None, notData)
 
     if not results:
         global_functions.get_exception_details("404", custom_detail="No menu type found.")
@@ -59,8 +62,9 @@ async def type_menu(
 @router.get("/type/recommended")
 async def type_menu(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
+    company_id: int = Query(None, title=COMPANY_ID, description="The ID of the user to consult"),
 ):
-    """Función utilizada para consultar la lista de opciones de tipo Menu.
+    """Función utilizada para consultar la lista de opciones de tipo Menu recomendado.
 
     Args:
 
@@ -72,7 +76,7 @@ async def type_menu(
     """
     id = 2
     filterdata = 'Recomendaciones'
-    results = TypeService(db).consult_type_db(id, filterdata=filterdata)
+    results = TypeService(db).consult_type_db(id, company_id, filterdata=filterdata)
 
     if not results:
         global_functions.get_exception_details("404", custom_detail="No menu type found.")

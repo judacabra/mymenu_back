@@ -11,9 +11,12 @@ class TypeService:
         self.db = db
         
 
-    def consult_type_db(self, id_view: int = None, filterdata: str = None, notData: str = None):
+    def consult_type_db(self, id_view: int, id_company: int = None, filterdata: str = None, notData: str = None):
         try:
             query = self.db.query(Type)
+
+            if id_company is not None:
+                query = query.filter(Type.id_company == id_company)
 
             if id_view is not None:
                 query = query.filter(Type.id_view == id_view)
