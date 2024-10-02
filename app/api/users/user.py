@@ -8,11 +8,14 @@ from app.services.user.user_service import UserService
 
 router = APIRouter()
 
-USERNAME = "username"
+USERNAME = "Username"
+USER_ID = "ID User"
 
 @router.get("/users")
 async def users(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
+    user_id: int = Query(None, title=USER_ID, description="The ID of the user which consult the users"),
+
 ):
     """Función utilizada para consultar la lista de usuarios.
 
@@ -25,10 +28,10 @@ async def users(
         dict: Retorna un diccionario con la información de los usuarios.
     """
     
-    results = UserService(db).consult_users_db()
+    results = UserService(db).consult_users_db(user_id)
 
     if not results:
-        global_functions.get_exception_details("404", custom_detail="No products found.")
+        global_functions.get_exception_details("404", custom_detail="No users found.")
 
     return results
 

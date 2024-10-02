@@ -34,5 +34,18 @@ class GlobalFunctions:
         except Exception as e:
             print(f"Error getting git tag: {e}")
             return "0.0.0"
+        
+    @staticmethod
+    def normalize_string(input_string: str) -> str:
+        if input_string is None:
+            return None
+
+        with_tildes = "áéíóú"
+        without_tildes = "aeiou"
+        translation_table = str.maketrans(with_tildes, without_tildes)
+        
+        normalized_string = input_string.translate(translation_table).lower()
+        
+        return normalized_string
 
 global_functions = GlobalFunctions()

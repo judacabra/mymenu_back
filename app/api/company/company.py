@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from typing import List, Dict, Any
+from typing import Optional
 
 from app.utils.conn import db_manager 
 from app.utils.global_functions import global_functions
@@ -7,6 +7,7 @@ from app.utils.global_functions import global_functions
 from app.services.company.company_service import CompanyService
 
 ID = "ID Company"
+NAME = "Name Company"
 
 router = APIRouter()
 
@@ -35,13 +36,13 @@ async def companies(
     return results
 
 
-@router.get("/company_by_id")
-async def company_by_id(
+@router.get("/company_by_param")
+async def company_by_param(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
-    id: int = Query(None, title=ID, description="The ID of the company to consult"),
-
+    id: Optional[int] = Query(None, title=ID, description="The ID of the company to consult"),
+    name: Optional[str] = Query(None, title=NAME, description="The Name of the company to consult"),
 ):
-    """Función utilizada para consultar la informacion de la empresa.
+    """Función utilizada para consultar la informacion de una empresa por id o nombre.
 
     Args:
 
@@ -49,10 +50,15 @@ async def company_by_id(
 
     Returns:
 
-        dict: Retorna un diccionario con la información de la empresa.
+        dict: Retorna un diccionario con la información de una empresa.
     """
-    
-    results = CompanyService(db).get_company_by_id(id)
+    if id:
+        args = id, None
+
+    if name:
+        args = None, name
+
+    results = CompanyService(db).get_company_by_param(*args)
 
     if not results:
         global_functions.get_exception_details("404", custom_detail="No company found.")

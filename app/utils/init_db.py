@@ -81,6 +81,7 @@ class DBInitializer:
             initial_company = CompanyCreate(
                 name = "DevSoftone",
                 nit = "1144202047",
+                img = 'logo-devsoftone.png',
                 description = "Empresa de desarrollo de software",
                 address = "Centro Comercial Chipichape",
                 active = True
@@ -133,36 +134,43 @@ class DBInitializer:
         try:
             initial_types = [
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 1,
                     name = 'Carta',
-                    url = 'restaurant/menu',
+                    url = '/menu',
                 ),
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 1,
                     name = 'Reservas',
-                    url = 'restaurant/bookings',
+                    url = '/bookings',
                 ),
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 1,
                     name = 'Contacto',
                     url = 'https://api.whatsapp.com/send?phone=57${this.contacto.numero}&text=${this.contacto.mensaje}',
                 ),
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 2,
                     name = 'Recomendaciones del chef',
                     url = 'recomendaciones',
                 ),
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 2,
                     name = 'Entradas',
                     url = 'entradas',
                 ),
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 2,
                     name = 'Fuertes',
                     url = 'fuertes',
                 ),
                 TypeCreate(
+                    id_company = 1,                    
                     id_view = 2,
                     name = 'Bebidas',
                     url = 'bebidas',

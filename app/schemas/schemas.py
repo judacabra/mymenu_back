@@ -41,18 +41,21 @@ class ViewUpdate(BaseModel):
 
 
 class TypeCreate(BaseModel):
+    id_company : int
     id_view : int
     name : str
     url : str
 
 
 class TypeUpdate(BaseModel):
+    id_company : Optional[int] = None
     id_view : Optional[int] = None
     name : Optional[str] = None
     url : Optional[str] = None
 
 
 class ProductCreate(BaseModel):
+    id_company: int
     name : str
     description : str
     id_type : int

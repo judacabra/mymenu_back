@@ -9,7 +9,31 @@ class UserService:
         self.db = db
 
 
-    def consult_users_db(self):
+    def consult_users_db(self, user_id):
+        try:
+            db_user = self.db.query(User, Profile)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.id == user_id)\
+                .first() 
+            
+            if db_user:
+                user, profile = db_user
+                
+                if profile.id == 1:
+                    db_users = self.consult_users_by_superadmin()
+                else:
+                    db_users = self.consult_users_by_company(user_id)
+
+                return db_users
+        
+
+        except SQLAlchemyError as e:
+            print(f"Error getting Users: {e}")
+            self.db.rollback()
+            return False
+
+
+    def consult_users_by_superadmin(self):
         try:
             db_users = self.db.query(User, Company, Profile)\
             .join(Company, User.id_company == Company.id)\
@@ -30,9 +54,38 @@ class UserService:
                     }
                     for user, company, profile in db_users
                 ]
+        
+        except SQLAlchemyError as e:
+            print(f"Error getting Users by superadmin: {e}")
+            self.db.rollback()
+            return False
+
+
+    def consult_users_by_company(self, user_id):
+        try:
+            db_users = self.db.query(User, Company, Profile)\
+                .join(User, User.id_company == Company.id)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.id_company == user_id)\
+                .all()
+
+            if db_users:
+                return [
+                    {
+                        "id": user.id,
+                        "name": user.name,
+                        "username": user.username,
+                        "email": user.email,
+                        "active": user.active,
+                        "profile_name": profile.name,
+                        "company_name": company.name,
+                        "fecha_creacion": user.fecha_creacion,
+                    }
+                    for user, company, profile in db_users
+                ]
 
         except SQLAlchemyError as e:
-            print(f"Error getting Users: {e}")
+            print(f"Error getting Users by company(by user): {e}")
             self.db.rollback()
             return False
 

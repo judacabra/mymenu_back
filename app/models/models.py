@@ -21,6 +21,8 @@ class Company(Base):
 
     contact = relationship("Contact", back_populates="company")
     user = relationship("User", back_populates="company")
+    product = relationship("Product", back_populates="company")
+    type = relationship("Type", back_populates="company")
 
 
 class Contact(Base):
@@ -33,9 +35,6 @@ class Contact(Base):
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     company = relationship("Company", back_populates="contact")
-
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     
     
 class View(Base):
@@ -52,22 +51,22 @@ class Type(Base):
     __tablename__ = "type"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
     id_view = Column(BigInteger, ForeignKey("view.id"), nullable=False)
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     view = relationship("View", back_populates="type")
+    company = relationship("Company", back_populates="type")
     product = relationship("Product", back_populates="type")
-
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class Product(Base):
     __tablename__ = "product"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     id_type = Column(BigInteger, ForeignKey("type.id"), nullable=False)
@@ -78,9 +77,7 @@ class Product(Base):
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
 
     type = relationship("Type", back_populates="product")
-
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    company = relationship("Company", back_populates="product")
 
 
 class Permission(Base):
@@ -105,9 +102,6 @@ class Profile(Base):
     user = relationship("User", back_populates="profile")
     profile_permissions = relationship("ProfilePermission", back_populates="profile", cascade="all, delete")
 
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
 
 class ProfilePermission(Base):
     __tablename__ = "profile_permission"
@@ -118,9 +112,6 @@ class ProfilePermission(Base):
 
     profile = relationship("Profile", back_populates="profile_permissions")
     permission = relationship("Permission", back_populates="profile_permissions")
-
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class User(Base):
@@ -138,6 +129,3 @@ class User(Base):
 
     profile = relationship("Profile", back_populates="user")
     company = relationship("Company", back_populates="user")
-
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -2,7 +2,7 @@ from sqlalchemy import desc, or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models.models import Product
+from app.models.models import Company, Product, Profile, User
 
 class ProductService:
 
@@ -10,14 +10,75 @@ class ProductService:
         self.db = db
         
 
-    def consult_product_db(self):
+    def consult_product_db(self, user_id: int):
         try:
-            db_products = self.db.query(Product)
-        
+            db_user = self.db.query(User, Profile)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.id == user_id)\
+                .first() 
+            
+            if db_user:
+                user, profile = db_user
+                
+                if profile.id == 1:
+                    db_products = self.consult_product_by_superadmin()
+                else:
+                    db_products = self.consult_product_by_company(user.id_company)
+
+                return db_products
+                
+
+        except SQLAlchemyError as e:
+            print(f"Error getting Products: {e}")
+            self.db.rollback()
+            return False
+
+
+    def consult_product_by_superadmin(self):
+        try:
+            db_products = self.db.query(Product, Company)\
+                .join(Company, Product.id_company == Company.id)\
+                .all()     
+            
             if db_products:
                 return [
                     {
                         "id": product.id,
+                        "company_name": company.name,
+                        "name": product.name,
+                        "description": product.description,
+                        "id_type": product.id_type,
+                        "recommended": product.recommended,
+                        "img": product.img,
+                        "price": product.price,
+                        "pricsadfe": 'putamadre',
+                        "stock": product.stock
+                    }
+
+                    for product, company in db_products
+                ]
+
+        except SQLAlchemyError as e:
+            print(f"Error getting Products by superadmin: {e}")
+            self.db.rollback()
+            return False
+
+
+    def consult_product_by_company(self, id_company: int):
+        try:
+            query = self.db.query(Product, Company)\
+                .join(Company, Product.id_company == Company.id)
+
+            if id_company is not None:
+                query =  query.filter(Company.id == id_company)
+
+            db_products = query.all()
+
+            if db_products:
+                return [
+                    {
+                        "id": product.id,
+                        "company_name": company.name,
                         "name": product.name,
                         "description": product.description,
                         "id_type": product.id_type,
@@ -26,13 +87,14 @@ class ProductService:
                         "price": product.price,
                         "stock": product.stock
                     }
-                    for product in db_products
+                    for product, company in db_products
                 ]
 
         except SQLAlchemyError as e:
-            print(f"Error getting Products: {e}")
+            print(f"Error getting Products by company: {e}")
             self.db.rollback()
             return False
+
 
     def register_product_db(self, product):
         try:

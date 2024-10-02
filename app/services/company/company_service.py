@@ -33,21 +33,30 @@ class CompanyService:
             return False
 
 
-    def get_company_by_id(self, id: int):
+    def get_company_by_param(self, id: int = None, name: str = None):
         try:
-            db_company = self.db.query(Company)\
-                .filter(Company.id == id)\
-                .first()
+            query = self.db.query(Company)
 
-            if db_company:
+            if id is not None:
+                query = query.filter(Company.id == id)
+
+            if name is not None:
+                company_name = func.lower(func.translate(func.replace(Company.name, ' ', ''), "áéíóú", "aeiou"))  
+                name = func.lower(name)        
+                   
+                query = query.filter(company_name == name) 
+
+            company = query.first()
+
+            if company:
                 return {
-                    "id": db_company.id,
-                    "name": db_company.name,
-                    "nit": db_company.nit,
-                    "description": db_company.description,
-                    "address": db_company.address,
-                    "img": db_company.img,
-                    "active": db_company.active,
+                    "id": company.id,
+                    "name": company.name,
+                    "nit": company.nit,
+                    "description": company.description,
+                    "address": company.address,
+                    "img": company.img,
+                    "active": company.active,
                 }
 
         except SQLAlchemyError as e:
