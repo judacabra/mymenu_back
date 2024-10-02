@@ -1,13 +1,93 @@
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from app.models.models import User, Profile
-import os
+from app.models.models import Company, Permission, Profile, ProfilePermission, User
 
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
+
+
+    def consult_users_db(self, user_id):
+        try:
+            db_user = self.db.query(User, Profile)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.id == user_id)\
+                .first() 
+            
+            if db_user:
+                user, profile = db_user
+                
+                if profile.id == 1:
+                    db_users = self.consult_users_by_superadmin()
+                else:
+                    db_users = self.consult_users_by_company(user_id)
+
+                return db_users
+        
+
+        except SQLAlchemyError as e:
+            print(f"Error getting Users: {e}")
+            self.db.rollback()
+            return False
+
+
+    def consult_users_by_superadmin(self):
+        try:
+            db_users = self.db.query(User, Company, Profile)\
+            .join(Company, User.id_company == Company.id)\
+            .join(Profile, User.id_profile == Profile.id)\
+            .all()
+        
+            if db_users:
+                return [
+                    {
+                        "id": user.id,
+                        "name": user.name,
+                        "username": user.username,
+                        "email": user.email,
+                        "active": user.active,
+                        "profile_name": profile.name,
+                        "company_name": company.name,
+                        "fecha_creacion": user.fecha_creacion,
+                    }
+                    for user, company, profile in db_users
+                ]
+        
+        except SQLAlchemyError as e:
+            print(f"Error getting Users by superadmin: {e}")
+            self.db.rollback()
+            return False
+
+
+    def consult_users_by_company(self, user_id):
+        try:
+            db_users = self.db.query(User, Company, Profile)\
+                .join(User, User.id_company == Company.id)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.id_company == user_id)\
+                .all()
+
+            if db_users:
+                return [
+                    {
+                        "id": user.id,
+                        "name": user.name,
+                        "username": user.username,
+                        "email": user.email,
+                        "active": user.active,
+                        "profile_name": profile.name,
+                        "company_name": company.name,
+                        "fecha_creacion": user.fecha_creacion,
+                    }
+                    for user, company, profile in db_users
+                ]
+
+        except SQLAlchemyError as e:
+            print(f"Error getting Users by company(by user): {e}")
+            self.db.rollback()
+            return False
 
 
     def get_user_db(self, email: str, username: str = None):
@@ -82,21 +162,53 @@ class UserService:
             self.db.rollback()
             return False
 
+
+    def get_logged_permissions_db(self, user_id: int):
         try:
-            query = self.db.query(User)
-            db_user = query.filter(User.id == id).first()
+            db_permissions = self.db.query(User, Profile, ProfilePermission, Permission)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .join(ProfilePermission, Profile.id == ProfilePermission.id_profile)\
+                .join(Permission, ProfilePermission.id_permission == Permission.id)\
+                .filter(User.id == user_id)\
+                .all()
 
-            if db_user:
-                if filename is not None:
-                    db_user.picture = filename
-
-                self.db.commit()
-                self.db.refresh(db_user)
-                return {"message": "Profile picture chnaged succesfully"}
-
-            raise ValueError("User not found")
+            if db_permissions:
+                return [
+                    {
+                        "id": permission.id,
+                        "name": permission.name,
+                    }
+                    for user, profile, profile_permission, permission in db_permissions
+                ]
 
         except SQLAlchemyError as e:
-            print(f"Error adding the file: {e}")
+            print(f"Error getting logged user permissions: {e}")
+            self.db.rollback()
+            return False
+
+
+    def get_logged_user_db(self, username: str):
+        try:
+            db_user = self.db.query(User, Company, Profile)\
+                .join(Company, User.id_company == Company.id)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.username == username)\
+                .first()  
+
+            if db_user:
+                user, company, profile = db_user
+                db_permissions = self.get_logged_permissions_db(user.id)
+
+                return {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "profile_name": profile.name,
+                    "company_name": company.name,
+                    "permissions": db_permissions or []
+                }
+
+        except SQLAlchemyError as e:
+            print(f"Error getting logged user info: {e}")
             self.db.rollback()
             return False

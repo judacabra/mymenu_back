@@ -4,10 +4,15 @@ from typing import List, Dict, Any
 
 from fastapi.security import OAuth2PasswordRequestForm
 from app.services.user.auth_service import AuthService
+from app.utils.config import get_settings
 from app.utils.global_functions import global_functions
 from app.utils.conn import db_manager 
 
 router = APIRouter()
+settings = get_settings()
+
+USER_ID = "User ID"
+MODULE = "user"
 
 @router.post("/login")
 def login(
@@ -26,6 +31,10 @@ def login(
     user = AuthService(db).authenticate_user(username=form_data.username, password=form_data.password)
     if user["message"] != "User found":
         global_functions.get_exception_details("401", custom_detail="Invalid credentials")
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = AuthService(db).create_access_token(data={"sub": str(user["id"])}, expires_delta=access_token_expires, secret_key=settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/logout", response_model = List[Dict[str, Any]])
