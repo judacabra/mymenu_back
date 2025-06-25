@@ -14,6 +14,8 @@ from app.utils.init_db import DBInitializer
 
 from app.utils.config import get_settings
 
+get_settings.cache_clear()
+
 settings = get_settings()
 
 app = FastAPI()

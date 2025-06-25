@@ -1,6 +1,7 @@
-from sqlalchemy import desc, func, or_, and_
+from sqlalchemy import desc, func, or_, and_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+import unicodedata
 
 from app.models.models import Company
 
@@ -8,6 +9,12 @@ class CompanyService:
     def __init__(self, db: Session):
         self.db = db
 
+    def normalizar_texto(self, texto: str):
+        if texto is None:
+            return ""
+        texto = texto.replace(" ", "")
+        texto = unicodedata.normalize('NFD', texto).encode('ascii', 'ignore').decode('utf-8')
+        return texto.lower()
 
     def consult_companies(self):
         try:
@@ -15,7 +22,7 @@ class CompanyService:
 
             if db_companies:
                 return [
-                        {
+                    {
                         "id": company.id,
                         "name": company.name,
                         "nit": company.nit,
@@ -41,8 +48,11 @@ class CompanyService:
                 query = query.filter(Company.id == id)
 
             if name is not None:
-                company_name = func.lower(func.translate(func.replace(Company.name, ' ', ''), "áéíóú", "aeiou"))  
-                name = func.lower(name)        
+                company_name = self.normalizar_texto(name)
+                
+                stmt = select(Company).where(
+                    func.lower(func.replace(Company.name, ' ', '')) == company_name
+                ).limit(1)
                    
                 query = query.filter(company_name == name) 
 

@@ -7,15 +7,21 @@ class DatabaseManager:
     def __init__(self):
         self.settings = get_settings()
 
-        self.USER = self.settings.USER
-        self.PASSWORD = self.settings.PASSWORD
-        self.HOST = self.settings.HOST
+        self.TYPE = self.settings.TYPE_DB
+        self.USER = self.settings.USER_DB
+        self.PASSWORD = self.settings.PASSWORD_DB
+        self.HOST = self.settings.HOST_DB
         self.DATABASE_NAME = self.settings.DATABASE_NAME
 
-        if not all([self.USER, self.PASSWORD, self.HOST, self.DATABASE_NAME]):
+        if not all([self.USER, self.HOST, self.DATABASE_NAME]):
             raise ValueError("Faltan variables de entorno necesarias")
 
-        self.DATABASE_URL = f"postgresql://{self.USER}:{self.PASSWORD}@{self.HOST}/{self.DATABASE_NAME}"
+        if self.TYPE == "postgresql":
+            self.DATABASE_URL = f"postgresql://{self.USER}:{self.PASSWORD}@{self.HOST}/{self.DATABASE_NAME}"
+        elif self.TYPE == "mysql":
+            self.DATABASE_URL = f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}/{self.DATABASE_NAME}"
+        else:
+            raise ValueError(f"Tipo de base de datos no soportado: {self.TYPE}")
 
         try:
             self.engine = create_engine(self.DATABASE_URL)

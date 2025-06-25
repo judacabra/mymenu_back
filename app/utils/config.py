@@ -4,11 +4,12 @@ from functools import lru_cache
 class Settings(BaseSettings):
 
     # Databse Info
-    HOST: str
+    TYPE_DB: str
+    HOST_DB: str
     DATABASE_NAME: str
-    PORT: int
-    USER: str
-    PASSWORD: str
+    PORT_DB: int
+    USER_DB: str
+    PASSWORD_DB: str
 
     # Token Info
     SECRET_KEY: str
@@ -34,7 +35,7 @@ class Settings(BaseSettings):
     LENGTH_TEMP_PASS: int
 
     class Config:
-        env_file = ".env.sample"
+        env_file = ".env"
 
 @lru_cache()
 def get_settings():
