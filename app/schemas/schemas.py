@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-
+from fastapi import UploadFile
 
 class CompanyCreate(BaseModel):
     name : str
@@ -60,19 +60,19 @@ class ProductCreate(BaseModel):
     description : str
     id_type : int
     recommended : str
-    img : str
+    img : Optional[UploadFile] = None,
     price : int
     stock: int
+    status: bool
 
 
 class ProductUpdate(BaseModel):
     name : Optional[str] = None
     description : Optional[str] = None
     id_type : Optional[int] = None
-    recommended : Optional[str] = None
-    img : Optional[str] = None
     price : Optional[int] = None
     stock: Optional[int] = None
+    status: Optional[bool] = None
 
 
 class PermissionCreate(BaseModel):

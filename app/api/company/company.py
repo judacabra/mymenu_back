@@ -11,7 +11,6 @@ NAME = "Name Company"
 
 router = APIRouter()
 
-
 @router.get("/companies")
 async def companies(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
@@ -20,11 +19,9 @@ async def companies(
     """Función utilizada para consultar información de las empresas.
 
     Args:
-
         db (SessionLocal): Conexión de la base de datos. Defaults to Depends(get_db).
 
     Returns:
-
         dict: Retorna un diccionario con la información de las empresas.
     """
     

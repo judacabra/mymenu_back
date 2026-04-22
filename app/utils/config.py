@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     # Origin Info
     FRONTEND: str
+    FRONTEND_MOBILE: str
     BACKEND: str
 
     # Email Info

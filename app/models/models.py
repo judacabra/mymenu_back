@@ -72,10 +72,11 @@ class Product(Base):
     description = Column(String, nullable=False)
     id_type = Column(BigInteger, ForeignKey("type.id"), nullable=False)
     recommended = Column(String, default="NO", nullable=False)
-    img = Column(String, nullable=False)
+    img = Column(String)
     price = Column(BigInteger, nullable=False)
     stock = Column(BigInteger, nullable=False)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    status = Column(Boolean, nullable=False)
 
     type = relationship("Type", back_populates="product")
     company = relationship("Company", back_populates="product")

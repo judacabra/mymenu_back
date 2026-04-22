@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.auth.auth import router as routerAuth 
 from app.api.company.company import router as routerCompany 
@@ -21,7 +24,8 @@ settings = get_settings()
 app = FastAPI()
 
 origins = [
-    settings.FRONTEND
+    settings.FRONTEND,
+    settings.FRONTEND_MOBILE,
 ]
 
 app.add_middleware(
@@ -32,12 +36,19 @@ app.add_middleware(
     allow_headers = ["*"], 
 )
 
-app.include_router(routerAuth,  tags=["Auth"])
-app.include_router(routerCompany,  tags=["Company"])
-app.include_router(routerProduct,  tags=["Products"])
-app.include_router(routerProfile,  tags=["Profiles"])
-app.include_router(routerTypes,  tags=["Types"])
-app.include_router(routerUsers,  tags=["Users"])
+BASE_DIR = Path(__file__).parent
+UPLOAD_DIR = BASE_DIR / "uploads"
+
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+app.include_router(routerAuth, tags=["Auth"])
+app.include_router(routerCompany, tags=["Company"])
+app.include_router(routerProduct, tags=["Products"])
+app.include_router(routerProfile, tags=["Profiles"])
+app.include_router(routerTypes, tags=["Types"])
+app.include_router(routerUsers, tags=["Users"])
 
 db_initializer = DBInitializer(db_manager.session_local())
 

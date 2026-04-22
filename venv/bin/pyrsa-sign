@@ -1,4 +1,4 @@
-#!/Data/Desarrollo/proyectos/mymenu/mymenu_back/venv/bin/python3
+#!/Data/Proyectos/mymenu/mymenu_back/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
