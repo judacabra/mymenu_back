@@ -1,0 +1,25 @@
+# Python compilados
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Uploads y archivos subidos
+uploads/
+media/
+temp/
+tmp/
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+.venv/
+
+# Archivos de configuración local
+.env
+*.local
+
+# Logs
+*.log
+logs/
