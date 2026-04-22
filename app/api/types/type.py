@@ -38,7 +38,7 @@ async def type_home(
 @router.get("/type/menu")
 async def type_menu(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
-    company_id: int = Query(None, title=COMPANY_ID, description="The ID of the user to consult"),
+    company_id: int = Query(None, title=COMPANY_ID, description="The ID of the company to consult"),
 ):
     """Función utilizada para consultar la lista de opciones de tipo Menu.
 

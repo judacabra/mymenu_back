@@ -74,7 +74,7 @@ async def product_by_id(
 
     return results
 
-@router.post("/products")
+@router.post("/product")
 async def set_product(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
     product_data: str = Form(...),
@@ -134,7 +134,12 @@ async def update_product(
     
     db_product = json.loads(product_data)
             
+    current_product = ProductService(db).get_product_by_id(id)
+    
     if img and img.filename:
+        if current_product:
+            ProductService(db).delete_old_image(current_product.get('img'))
+        
         unique_suffix = f"{datetime.now().timestamp()}-{os.urandom(8).hex()}"
         file_extension = Path(img.filename).suffix
         filename = f"img-{unique_suffix}{file_extension}"

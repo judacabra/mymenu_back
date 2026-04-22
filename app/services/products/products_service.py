@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from sqlalchemy import desc, or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -202,3 +205,18 @@ class ProductService:
         except SQLAlchemyError as e:
             print(f"Error deleting Products: {e}")
             return False
+        
+        
+    def delete_old_image(self, image_path: str) -> bool:
+        if not image_path:
+            return False
+        
+        path = Path(image_path)
+        if path.exists() and path.is_file():
+            try:
+                os.remove(path)
+                return True
+            except Exception as e:
+                print(f"Error eliminando {path}: {e}")
+                return False
+        return False

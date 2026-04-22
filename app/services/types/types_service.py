@@ -2,7 +2,7 @@ from sqlalchemy import desc, or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models.models import Type
+from app.models.models import Company, Type
 
 
 class TypeService:
@@ -15,11 +15,16 @@ class TypeService:
         try:
             query = self.db.query(Type)
 
-            if id_company is not None:
-                query = query.filter(Type.id_company == id_company)
-
             if id_view is not None:
                 query = query.filter(Type.id_view == id_view)
+                
+            if id_view is not None and id_company is not None:
+                exist_company = self.db.query(Company).filter(Company.id == id_company).first()
+                
+                if exist_company is not None:
+                    query = query.filter(Type.id_company == id_company)
+                else:
+                    return False
 
             if filterdata is not None:
                 filterdata = f"%{filterdata}%"
@@ -29,6 +34,7 @@ class TypeService:
                 notData = f"%{notData}%"
                 query = query.filter(~Type.name.like(notData))
 
+            print(str(query))
             db_types = query.all()
 
             if db_types:
@@ -39,6 +45,7 @@ class TypeService:
                         "name": types.name,  
                         "url": types.url,  
                     }
+                    
                     for types in db_types
                 ]
 
