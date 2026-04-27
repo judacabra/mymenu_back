@@ -50,7 +50,7 @@ class UserService:
                         "active": user.active,
                         "profile_name": profile.name,
                         "company_name": company.name,
-                        "fecha_creacion": user.fecha_creacion,
+                        "date": user.date,
                     }
                     for user, company, profile in db_users
                 ]
@@ -79,7 +79,7 @@ class UserService:
                         "active": user.active,
                         "profile_name": profile.name,
                         "company_name": company.name,
-                        "fecha_creacion": user.fecha_creacion,
+                        "date": user.date,
                     }
                     for user, company, profile in db_users
                 ]

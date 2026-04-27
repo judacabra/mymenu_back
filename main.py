@@ -10,6 +10,7 @@ from app.api.products.product import router as routerProduct
 from app.api.profiles.profile import router as routerProfile
 from app.api.types.type import router as routerTypes 
 from app.api.users.user import router as routerUsers 
+from app.api.smtp.smtp import router as routerSMTP
 
 from app.models.models import Base
 from app.utils.conn import db_manager
@@ -49,6 +50,7 @@ app.include_router(routerProduct, tags=["Products"])
 app.include_router(routerProfile, tags=["Profiles"])
 app.include_router(routerTypes, tags=["Types"])
 app.include_router(routerUsers, tags=["Users"])
+app.include_router(routerSMTP, tags=["SMTP"])
 
 db_initializer = DBInitializer(db_manager.session_local())
 

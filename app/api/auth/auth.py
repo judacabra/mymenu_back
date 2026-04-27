@@ -30,7 +30,7 @@ def login(
 
     user = AuthService(db).authenticate_user(username=form_data.username, password=form_data.password)
     if user["message"] != "User found":
-        global_functions.get_exception_details("401", custom_detail="Invalid credentials")
+        global_functions.get_exception_details("401", custom_detail="Credenciales incorrectas")
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = AuthService(db).create_access_token(data={"sub": str(user["id"])}, expires_delta=access_token_expires, secret_key=settings.SECRET_KEY, algorithm=settings.ALGORITHM)

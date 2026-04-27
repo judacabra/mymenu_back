@@ -118,3 +118,9 @@ class UserUpdate(BaseModel):
     active : Optional[bool] = None
     id_profile : Optional[int] = None
     id_company : Optional[int] = None
+
+
+class EmailData(BaseModel):
+    to: str
+    subject: str
+    body: str

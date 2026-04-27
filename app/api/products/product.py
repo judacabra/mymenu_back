@@ -1,7 +1,6 @@
 from types import SimpleNamespace
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
 
 import os
 import shutil

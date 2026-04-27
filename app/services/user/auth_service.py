@@ -46,8 +46,6 @@ class AuthService:
 
 
     def verify_password(self, plain_password: str, hashed_password: str):
-        print(f"pass >>>" + hashed_password); 
-        
         return pwd_context.verify(plain_password, hashed_password)
 
 

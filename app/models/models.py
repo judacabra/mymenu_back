@@ -18,7 +18,7 @@ class Company(Base):
     address = Column(String, nullable=False)
     img = Column(String)
     active = Column(Boolean, default=True, nullable=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     contact = relationship("Contact", back_populates="company")
     user = relationship("User", back_populates="company")
@@ -33,7 +33,7 @@ class Contact(Base):
     id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
     number = Column(BigInteger, nullable=False)
     message = Column(String)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     company = relationship("Company", back_populates="contact")
     
@@ -43,7 +43,7 @@ class View(Base):
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     type = relationship("Type", back_populates="view")
 
@@ -56,7 +56,7 @@ class Type(Base):
     id_view = Column(BigInteger, ForeignKey("view.id"), nullable=False)
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     view = relationship("View", back_populates="type")
     company = relationship("Company", back_populates="type")
@@ -75,7 +75,7 @@ class Product(Base):
     img = Column(String)
     price = Column(BigInteger, nullable=False)
     stock = Column(BigInteger, nullable=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(Boolean, nullable=False)
 
     type = relationship("Type", back_populates="product")
@@ -88,7 +88,7 @@ class Permission(Base):
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     profile_permissions = relationship("ProfilePermission", back_populates="permission")
 
@@ -99,7 +99,7 @@ class Profile(Base):
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
     description = Column(String)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="profile")
     profile_permissions = relationship("ProfilePermission", back_populates="profile", cascade="all, delete")
@@ -127,7 +127,7 @@ class User(Base):
     active = Column(Boolean, default=True, nullable=False)
     id_profile = Column(BigInteger, ForeignKey("profile.id"), nullable=False)
     id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     profile = relationship("Profile", back_populates="user")
     company = relationship("Company", back_populates="user")

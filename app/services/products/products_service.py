@@ -56,6 +56,7 @@ class ProductService:
                         "price": product.price,
                         "stock": product.stock,
                         "status": product.status,
+                        "date": product.date,
                     }
 
                     for product, company in db_products
@@ -90,7 +91,8 @@ class ProductService:
                         "img": product.img,
                         "price": product.price,
                         "stock": product.stock,
-                        "status": product.status
+                        "status": product.status,
+                        "date": product.date
                     }
                     for product, company in db_products
                 ]
