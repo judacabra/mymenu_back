@@ -1,5 +1,5 @@
 import json
-import datetime
+from datetime import datetime
 import os
 import aiofiles
 
@@ -47,11 +47,9 @@ async def company_by_param(
     """Función utilizada para consultar la informacion de una empresa por id o nombre.
 
     Args:
-
         db (SessionLocal): Conexión de la base de datos. Defaults to Depends(get_db).
 
     Returns:
-
         dict: Retorna un diccionario con la información de una empresa.
     """
     if id:
@@ -63,7 +61,7 @@ async def company_by_param(
     results = CompanyService(db).get_company_by_param(*args)
 
     if not results:
-        global_functions.get_exception_details("404", custom_detail="No company found.")
+        global_functions.get_exception_details("404", custom_detail="No se encontró la empresa.")
 
     return results
 
@@ -86,7 +84,7 @@ async def companies_info(
     results = CompanyService(db).get_companies_info()
 
     if not results:
-        global_functions.get_exception_details("404", custom_detail="No company info found.")
+        global_functions.get_exception_details("404", custom_detail="No se encontró información de la empresa.")
 
     return results
 
@@ -126,7 +124,7 @@ async def set_company(
             db_company['img'] = str(file_path)
             
         except Exception as e:
-            global_functions.get_exception_details("500", custom_detail="Error saving image: " + f"{str(e)}")
+            global_functions.get_exception_details("500", custom_detail="Error guardando la imagen de la empresa: " + f"{str(e)}")
 
     result = CompanyService(db).register_company_db(db_company)
 
@@ -151,7 +149,7 @@ async def update_company(
     
     db_company = json.loads(company_data)
             
-    current_company = CompanyService(db).get_company_by_id(id)
+    current_company = CompanyService(db).get_company_by_param(id, None)
     
     if img and img.filename:
         if current_company:

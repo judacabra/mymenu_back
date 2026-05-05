@@ -1,12 +1,13 @@
 import os
+import json
 from pathlib import Path
 
 from sqlalchemy import desc, or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-import json
-from app.models.models import Company, Product, Profile, User
+from app.schemas.schemas import ProductCreate, ProductUpdate
+from app.models.models import Company, Headquarter, Product, Profile, User
 
 class ProductService:
     def __init__(self, db: Session):
@@ -26,7 +27,7 @@ class ProductService:
                 if profile.id == 1:
                     db_products = self.consult_product_by_superadmin()
                 else:
-                    db_products = self.consult_product_by_company(user.id_company)
+                    db_products = self.consult_product_by_company(user.id_headquarter)
 
                 return db_products
                 
@@ -34,13 +35,14 @@ class ProductService:
         except SQLAlchemyError as e:
             print(f"Error getting Products: {e}")
             self.db.rollback()
-            return False
+            return []
 
 
     def consult_product_by_superadmin(self):
         try:
             db_products = self.db.query(Product, Company)\
                 .join(Company, Product.id_company == Company.id)\
+                .order_by(Product.id.desc())\
                 .all()     
                         
             if db_products:
@@ -63,21 +65,20 @@ class ProductService:
                 ]
 
         except SQLAlchemyError as e:
-            print(f"Error getting Products by superadmin: {e}")
+            print(f"Error obteniendo los productos como superadmin: {e}")
             self.db.rollback()
-            return False
+            return []
 
 
-    def consult_product_by_company(self, id_company: int):
+    def consult_product_by_company(self, id_headquarter: int):
         try:
-            query = self.db.query(Product, Company)\
-                .join(Company, Product.id_company == Company.id)
-
-            if id_company is not None:
-                query =  query.filter(Company.id == id_company)
-
-            query = query.filter(Product.status == True)
-            db_products = query.all()
+            db_products = self.db.query(Product, Company)\
+                .join(Company, Product.id_company == Company.id)\
+                .join(Headquarter, Headquarter.id_company == Company.id)\
+                .filter(Headquarter.id == id_headquarter)\
+                .filter(Product.status == True)\
+                .order_by(Product.id.desc())\
+                .all()
 
             if db_products:
                 return [
@@ -98,12 +99,12 @@ class ProductService:
                 ]
 
         except SQLAlchemyError as e:
-            print(f"Error getting Products by company: {e}")
+            print(f"Error obteniendo los products por empresa: {e}")
             self.db.rollback()
-            return False
+            return []
 
 
-    def register_product_db(self, product: dict):
+    def register_product_db(self, product: ProductCreate):
         try:
             db_product = Product()
             
@@ -122,13 +123,37 @@ class ProductService:
             self.db.commit()
             self.db.refresh(db_product)
             
-            return db_product
+            return self.get_product_by_id(db_product.id)
 
         except SQLAlchemyError as e:
             print(f"Error adding Products: {e}")
             self.db.rollback()
             return False
         
+
+    def update_product_db(self, id: int, product: ProductUpdate):
+        try:
+            exist_product = self.db.query(Product).filter(Product.id == id).first()
+            
+            if exist_product:
+                exist_product.name = product['name']
+                exist_product.description = product['description']
+                exist_product.id_type = product['id_type']
+                exist_product.recommended = product['recommended']
+                exist_product.price = product['price']
+                exist_product.stock = product['stock']
+                
+                if product.get('img'):
+                    exist_product.img = product['img']
+                
+                self.db.commit()
+                
+                return self.get_product_by_id(exist_product.id)
+
+        except SQLAlchemyError as e:
+            print(f"Error deleting Products: {e}")
+            return False
+
         
     def get_product_by_id(self, id: int):
         try:
@@ -155,40 +180,6 @@ class ProductService:
         except SQLAlchemyError as e:
             print(f"Error getting Product: {e}")
             self.db.rollback()
-            return False
-
-
-    def update_product_db(self, id: int, product: Product):
-        try:
-            exist_product = self.db.query(Product).filter(Product.id == id).first()
-            
-            if exist_product:
-                exist_product.name = product['name']
-                exist_product.description = product['description']
-                exist_product.id_type = product['id_type']
-                exist_product.recommended = product['recommended']
-                exist_product.price = product['price']
-                exist_product.stock = product['stock']
-                
-                if product.get('img'):
-                    exist_product.img = product['img']
-                
-                self.db.commit()
-                
-                return {
-                    "id": exist_product.id,
-                    "name": exist_product.name,
-                    "description": exist_product.description,
-                    "id_type": exist_product.id_type,
-                    "recommended": exist_product.recommended,
-                    "price": exist_product.price,
-                    "stock": exist_product.stock,
-                    "status": exist_product.status,
-                    "img": exist_product.img,
-                }
-
-        except SQLAlchemyError as e:
-            print(f"Error deleting Products: {e}")
             return False
 
 

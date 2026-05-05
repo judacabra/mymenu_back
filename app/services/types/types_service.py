@@ -2,7 +2,7 @@ from sqlalchemy import desc, or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models.models import Company, Type
+from app.models.models import Headquarter, Type
 
 
 class TypeService:
@@ -11,18 +11,18 @@ class TypeService:
         self.db = db
         
 
-    def consult_type_db(self, id_view: int, id_company: int = None, filterdata: str = None, notData: str = None):
+    def consult_type_db(self, id_view: int, id_headquarter: int = None, filterdata: str = None, notData: str = None):
         try:
             query = self.db.query(Type)
 
             if id_view is not None:
                 query = query.filter(Type.id_view == id_view)
                 
-            if id_view is not None and id_company is not None:
-                exist_company = self.db.query(Company).filter(Company.id == id_company).first()
+            if id_view is not None and id_headquarter is not None:
+                exist_headquarter = self.db.query(Headquarter).filter(Headquarter.id == id_headquarter).first()
                 
-                if exist_company is not None:
-                    query = query.filter(Type.id_company == id_company)
+                if exist_headquarter is not None:
+                    query = query.filter(Type.id_headquarter == id_headquarter)
                 else:
                     return False
 
@@ -86,46 +86,5 @@ class TypeService:
             print(f"Error adding types: {e}")
             self.db.rollback()
             return False
-
-
-    # def modify_types_db(self, types: dict):
-        try:
-            db_types = self.db.query(Type).get(types.id)
-
-            if not db_types:
-                return False
-
-            for key in [
-                'name', 'description', 'icon'
-            ]:
-                if getattr(types, key) is not None:
-                    setattr(db_types, key, getattr(types, key))
-
-            self.db.commit()
-            self.db.refresh(db_types)
-            return db_types
-
-        except SQLAlchemyError as e:
-            print(f"Error modifying types: {e}")
-            return False
-
-
-    # def delete_types_db(self, id: int):
-        try:
-            dependencies = self.get_types_dependencies(id)
-
-            if not dependencies:
-                db_types = self.db.query(Type).filter(Type.id == id).first()
-                if db_types is not None:
-
-                    self.db.delete(db_types)
-                    self.db.commit()
-                    return {"message": "types deleted"}
-                else:
-                    return {"error": "404", "message": "types not found"}
-
-            return {"error": "400", "message": "types has dependencies"}
-
-        except SQLAlchemyError as e:
-            print(f"Error deleting types: {e}")
-            return False
+        
+        

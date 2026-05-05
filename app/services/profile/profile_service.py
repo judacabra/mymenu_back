@@ -1,8 +1,11 @@
-from sqlalchemy import desc, or_, and_
+from datetime import datetime
+
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.models import ProfilePermission, User, Profile, Permission
+from app.schemas.schemas import ProfileCreate, ProfileUpdate
 
 class ProfileService:
     def __init__(self, db: Session):
@@ -118,100 +121,58 @@ class ProfileService:
             return False
 
 
-    # def consult_profile_db(self, id: int = None, filter_data: str = None, name: str = None):
-    #     try:
-    #         query = self.db.query(Profile)
-
-    #         if id is not None or name is not None:
-    #             db_profile = query.filter(or_(Profile.id == id, Profile.name == name)).first()
-    #             if db_profile:
-    #                 permissions = self.db.query(ProfilePermission)\
-    #                 .join(Permission, ProfilePermission.id_permission == Permission.id)\
-    #                 .filter(ProfilePermission.id_profile == db_profile.id)\
-    #                 .all()
-
-    #                 permission_list = [
-    #                     {
-    #                         "id": perm.id,
-    #                         "permission": {
-    #                             "id": perm.permission.id,
-    #                             "name": perm.permission.name
-    #                         }
-    #                     }
-    #                     for perm in permissions
-    #                 ]
-
-    #                 return {
-    #                     "id": db_profile.id,
-    #                     "name": db_profile.name,
-    #                     "description": db_profile.description,
-    #                     "permissions": permission_list if permission_list else None
-    #                 }
-    #             return {"id": 0}
-
-    #         if filter_data:
-    #             filter_pattern = f"%{filter_data}%"
-    #             query = query.filter(
-    #                 or_(
-    #                     Profile.name.ilike(filter_pattern),
-    #                     Profile.description.ilike(filter_pattern)
-    #                 )
-    #             )
-
-    #         db_profiles = query.order_by(desc(Profile.id)).all()
-
-    #         if db_profiles:
-    #             return [
-    #                 {
-    #                     "id": profile.id,
-    #                     "name": profile.name,
-    #                     "description": profile.description
-    #                 }
-    #                 for profile in db_profiles
-    #             ]
-
-    #         return False
-
-    #     except SQLAlchemyError as e:
-    #         print(f"Error getting profile: {e}")
-    #         self.db.rollback()
-    #         return False
-
-
-    def register_profile_db(self, profile):
+    def register_profile_db(self, profile: ProfileCreate):
         try:
-            self.db.add(profile)
+            db_profile = Profile(**profile.model_dump())
+        
+            self.db.add(db_profile)
             self.db.commit()
-            self.db.refresh(profile)
-            return profile
+            self.db.refresh(db_profile)
+            
+            return self.get_profile_by_id(db_profile.id)
 
         except SQLAlchemyError as e:
-            print(f"Error adding profile: {e}")
+            print(f"Error registrando un perfil nuevo: {e}")
             self.db.rollback()
             return False
 
 
-    def modify_profile_db(self, profile):
+    def update_profile_db(self, id:int, profile: ProfileUpdate):
         try:
-            db_profile = self.db.query(Profile).get(profile.id)
+            exist_profile = self.db.query(Profile).filter(Profile.id == id).first()
 
-            if not db_profile:
-                return False
-
-            for key in [
-                'name', 'description'
-            ]:
-                if getattr(profile, key) is not None:
-                    setattr(db_profile, key, getattr(profile, key))
-
-            self.db.commit()
-            self.db.refresh(db_profile)
-            return db_profile
+            if exist_profile:
+                update_data = profile.model_dump(exclude_unset=True)
+        
+                for key, value in update_data.items():
+                    setattr(exist_profile, key, value)
+                
+                self.db.commit()
+                self.db.refresh(exist_profile)
+                
+                return self.get_profile_by_id(exist_profile.id)
 
         except SQLAlchemyError as e:
             print(f"Error modifying user: {e}")
             self.db.rollback()
             return False
+
+
+    def get_profile_by_id(self, id: int):
+            try:
+                profile = self.db.query(Profile).filter(Profile.id == id).first()
+
+                if profile:
+                    return {
+                        "id": profile.id,
+                        "name": profile.name,
+                        "description": profile.description,
+                    }
+
+            except SQLAlchemyError as e:
+                print(f"Error obteniendo el perfil: {e}")
+                self.db.rollback()
+                return False
 
 
     def register_profile_permission_db(self, profile_permission):

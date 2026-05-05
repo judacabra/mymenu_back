@@ -15,6 +15,7 @@ class GlobalFunctions:
             "401": (status.HTTP_401_UNAUTHORIZED, "Token not available"),
             "404": (status.HTTP_404_NOT_FOUND, "Could not find the action"),
             "400": (status.HTTP_400_BAD_REQUEST, "Could not process the action"),
+            "500": (status.HTTP_500_INTERNAL_SERVER_ERROR, "Internal Server Error"),
         }
 
         http_status_code, default_detail = exceptions.get(

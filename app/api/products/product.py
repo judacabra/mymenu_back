@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
 
 import os
@@ -15,8 +13,6 @@ from app.utils.conn import db_manager
 from app.utils.global_functions import global_functions
 
 from app.services.products.products_service import ProductService
-from app.schemas.schemas import ProductCreate, ProductUpdate
-from app.models.models import Product
 
 ID = "ID Product"
 USER_ID = "ID User"
@@ -46,9 +42,6 @@ async def products(
     if company_id is not None:
         results = ProductService(db).consult_product_by_company(company_id)
 
-    if not results:
-        global_functions.get_exception_details("404", custom_detail="No products found.")
-
     return results
 
 @router.get("/product_by_id")
@@ -63,15 +56,15 @@ async def product_by_id(
         id INT: ID del producto a buscar
 
     Returns:
-        dict: Retorna un diccionario con la información de una empresa.
+        dict: Retorna un diccionario con la información de un producto.
     """
     
-    results = ProductService(db).get_product_by_id(id)
+    result = ProductService(db).get_product_by_id(id)
 
-    if not results:
-        global_functions.get_exception_details("404", custom_detail="No product found.")
+    if not result:
+        global_functions.get_exception_details("404", custom_detail="No se encontró el producto.")
 
-    return results
+    return result
 
 @router.post("/product")
 async def set_product(
@@ -84,9 +77,10 @@ async def set_product(
     Args:
         db: Conexión de la base de datos
         product: Objeto Product con los datos a insertar
+        img: (Opcional)
 
     Returns:
-        dict: Retorna un diccionario con la información del producto creado.
+        dict: Retorna un diccionario con la información del nuevo producto.
     """
         
     upload_dir = Path("./uploads/product")
@@ -113,7 +107,7 @@ async def set_product(
     results = ProductService(db).register_product_db(db_product)
 
     if not results:
-        global_functions.get_exception_details("500", custom_detail="No created product.")
+        global_functions.get_exception_details("500", custom_detail="No creó el producto.")
 
     return results
 
@@ -157,7 +151,7 @@ async def update_product(
     results = ProductService(db).update_product_db(id, db_product)
         
     if not results:
-        global_functions.get_exception_details("500", custom_detail="No updated product.")
+        global_functions.get_exception_details("500", custom_detail="No se actualizó el producto.")
         
     return results
 
@@ -179,6 +173,6 @@ async def delete_product(
     results = ProductService(db).delete_product_db(id)
 
     if not results:
-        global_functions.get_exception_details("500", custom_detail="No deleted product.")
+        global_functions.get_exception_details("500", custom_detail="No se eliminó el producto.")
 
     return results

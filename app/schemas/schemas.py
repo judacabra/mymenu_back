@@ -6,7 +6,6 @@ class CompanyCreate(BaseModel):
     name : str
     nit : int
     description : Optional[str] = None
-    address : str
     img : Optional[str] = None
     active : bool
 
@@ -15,19 +14,31 @@ class CompanyUpdate(BaseModel):
     name : Optional[str] = None
     nit : Optional[int] = None
     description : Optional[str] = None
+    active : Optional[bool] = None
+    
+    
+class HeadquarterCreate(BaseModel):
+    id_company : int
+    name : str
+    description : Optional[str] = None
+    address : str
+    active : bool
+    
+    
+class HeadquarterUpdate(BaseModel):
+    name : Optional[str] = None
+    description : Optional[str] = None
     address : Optional[str] = None
-    img : Optional[str] = None
     active : Optional[bool] = None
 
 
 class ContactCreate(BaseModel):
-    id_company : int
+    id_headquarter : int
     number : int
     message : Optional[str] = None
 
 
 class ContactUpdate(BaseModel):
-    id_company : Optional[int] = None
     number : Optional[int] = None
     message : Optional[str] = None
     
@@ -41,14 +52,13 @@ class ViewUpdate(BaseModel):
 
 
 class TypeCreate(BaseModel):
-    id_company : int
+    id_headquarter : int
     id_view : int
     name : str
     url : str
 
 
 class TypeUpdate(BaseModel):
-    id_company : Optional[int] = None
     id_view : Optional[int] = None
     name : Optional[str] = None
     url : Optional[str] = None
@@ -104,20 +114,16 @@ class UserCreate(BaseModel):
     name : str
     username : str
     email : str
-    password : str
     active : bool
     id_profile : int
-    id_company : int
 
 
 class UserUpdate(BaseModel):
     name : Optional[str] = None
     username : Optional[str] = None
     email : Optional[str] = None
-    password : Optional[str] = None
     active : Optional[bool] = None
     id_profile : Optional[int] = None
-    id_company : Optional[int] = None
 
 
 class EmailData(BaseModel):

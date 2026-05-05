@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.auth.auth import router as routerAuth 
 from app.api.company.company import router as routerCompany 
+from app.api.headquarter.headquarter import router as routerHeadquarter
 from app.api.products.product import router as routerProduct
 from app.api.profiles.profile import router as routerProfile
 from app.api.types.type import router as routerTypes 
@@ -46,6 +47,7 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 app.include_router(routerAuth, tags=["Auth"])
 app.include_router(routerCompany, tags=["Company"])
+app.include_router(routerHeadquarter, tags=["Headquarter"])
 app.include_router(routerProduct, tags=["Products"])
 app.include_router(routerProfile, tags=["Profiles"])
 app.include_router(routerTypes, tags=["Types"])

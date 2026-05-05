@@ -1,9 +1,11 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models.models import Company, Contact, View, Type, Permission, Profile, User, ProfilePermission
+from app.models.models import Company, Headquarter, Contact, View, Type, Permission, Profile, User, ProfilePermission
 
-from app.schemas.schemas import UserCreate, ProfileCreate, CompanyCreate, ContactCreate, ViewCreate, TypeCreate, ProfilePermissionManagment
+from app.schemas.schemas import UserCreate, ProfileCreate, CompanyCreate, HeadquarterCreate, ContactCreate, ViewCreate, TypeCreate, ProfilePermissionManagment
 
 from app.utils.config import get_settings
 
@@ -13,6 +15,7 @@ from app.services.views.views_service import ViewsService
 from app.services.types.types_service import TypeService
 from app.services.profile.profile_service import ProfileService
 from app.services.company.company_service import CompanyService
+from app.services.headquarter.headquarter_service import HeadquarterService
 from app.services.contact.contact_service import ContactService
 
 
@@ -21,11 +24,12 @@ class DBInitializer:
         self.db = db_session
         self.settings = get_settings()
 
-
     def init_db(self):
         try:
             if not self.check_company():
                 self.create_initial_company()
+            if not self.check_headquarter():
+                self.create_initial_headquarter()
             if not self.check_contact():
                 self.create_initial_contact()
             if not self.check_views():
@@ -47,6 +51,10 @@ class DBInitializer:
     def check_company(self) -> bool:
         company_count = self.db.query(Company).count()
         return company_count > 0
+    
+    def check_headquarter(self) -> bool:
+        headquarter_count = self.db.query(Headquarter).count()
+        return headquarter_count > 0
     
     def check_contact(self) -> bool:
         contact_count = self.db.query(Contact).count()
@@ -79,26 +87,46 @@ class DBInitializer:
     def create_initial_company(self):
         try:
             initial_company = CompanyCreate(
-                name = "DevSoftone",
+                name = "MyMenu",
                 nit = "1144202047",
-                img = 'logo-devsoftone.png',
                 description = "Empresa de desarrollo de software",
                 address = "Centro Comercial Chipichape",
+                date = datetime.now(),
+                img = "uploads/company/logo.png",
                 active = True
             )
 
-            company_db = Company(**initial_company.model_dump())
+            company_db = initial_company.model_dump(exclude_none=True)
             CompanyService(db=self.db).register_company_db(company_db)
 
             return company_db
         except Exception as e:
             self.db.rollback()
             print(f"Error trying to add the company: {e}")
-      
+    
+    def create_initial_headquarter(self):
+        try:
+            initial_headquarter = HeadquarterCreate(
+                id_company = 1,
+                name = "Sede sur",
+                description = "Empresa de desarrollo de software",
+                address = "Centro Comercial Chipichape",
+                date = datetime.now(),
+                active = True
+            )
+
+            headquarter_db = initial_headquarter.model_dump(exclude_none=True)
+            HeadquarterService(db=self.db).register_headquarter_db(headquarter_db)
+
+            return headquarter_db
+        except Exception as e:
+            self.db.rollback()
+            print(f"Error trying to add the company: {e}")
+    
     def create_initial_contact(self):
         try:
             initial_contact = ContactCreate(
-                id_company=1,
+                id_headquarter=1,
                 number=3160553500,
                 message="Jhon"
             )
@@ -134,43 +162,43 @@ class DBInitializer:
         try:
             initial_types = [
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 1,
                     name = 'Carta',
                     url = '/menu',
                 ),
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 1,
                     name = 'Reservas',
                     url = '/bookings',
                 ),
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 1,
                     name = 'Contacto',
-                    url = 'https://api.whatsapp.com/send?phone=57${this.contacto.numero}&text=${this.contacto.mensaje}',
+                    url = 'https://api.whatsapp.com/send?phone=57"numero"&text="mensaje"',
                 ),
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 2,
                     name = 'Recomendaciones del chef',
                     url = 'recomendaciones',
                 ),
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 2,
                     name = 'Entradas',
                     url = 'entradas',
                 ),
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 2,
                     name = 'Fuertes',
                     url = 'fuertes',
                 ),
                 TypeCreate(
-                    id_company = 1,                    
+                    id_headquarter = 1,                    
                     id_view = 2,
                     name = 'Bebidas',
                     url = 'bebidas',
@@ -210,10 +238,15 @@ class DBInitializer:
                 Permission(
                     id=4,
                     name="Empresas",
-                    description="Companys Parameter"
+                    description="Companies Parameter"
                 ),
                 Permission(
                     id=5,
+                    name="Sedes",
+                    description="Headquarter Parameter"
+                ),
+                Permission(
+                    id=6,
                     name="Perfiles",
                     description="Profile Parameter"
                 ),
@@ -235,6 +268,7 @@ class DBInitializer:
             self.db.add(permission)
             self.db.commit()
             self.db.refresh(permission)
+            
             return permission
 
         except SQLAlchemyError as e:
@@ -249,10 +283,9 @@ class DBInitializer:
                 description="Super Admin Profile",
             )
 
-            profile_db = Profile(**initial_profile.model_dump())
-            ProfileService(db=self.db).register_profile_db(profile_db)
+            ProfileService(db=self.db).register_profile_db(initial_profile)
 
-            return profile_db
+            return initial_profile
         except Exception as e:
             self.db.rollback()
             print(f"Error trying to add the profile: {e}")
@@ -280,6 +313,10 @@ class DBInitializer:
                     id_profile=1,
                     id_permission=5,
                 ),
+                ProfilePermissionManagment(
+                    id_profile=1,
+                    id_permission=6,
+                ),
             ]
 
             added_profiles_permissions = []
@@ -302,12 +339,12 @@ class DBInitializer:
             if profile is None:
                 raise ValueError("No se encontró ningún perfil para asignar al usuario.")
             
-            company = self.db.query(Company.id).first()
-            if company is None:
-                raise ValueError("No se encontró ningúna compañia para asignar al usuario.")
+            headquarter = self.db.query(Headquarter.id).first()
+            if headquarter is None:
+                raise ValueError("No se encontró ningúna sede para asignar al usuario.")
 
             profile_id = profile.id
-            company_id = company.id
+            headquarter_id = headquarter.id
 
             initial_user = UserCreate(
                 name=self.settings.NAME_USER,
@@ -315,7 +352,8 @@ class DBInitializer:
                 email=self.settings.EMAIL_USER,
                 password=hashed_password,
                 id_profile=profile_id,
-                id_company=company_id,
+                id_headquarter=headquarter_id,
+                is_first_login= False,
                 active=True
             )
 

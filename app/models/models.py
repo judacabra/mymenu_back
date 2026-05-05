@@ -15,27 +15,40 @@ class Company(Base):
     name = Column(String, nullable=False)
     nit = Column(BigInteger, nullable=False)
     description = Column(String)
-    address = Column(String, nullable=False)
     img = Column(String)
     active = Column(Boolean, default=True, nullable=False)
     date = Column(DateTime(timezone=True), server_default=func.now())
 
-    contact = relationship("Contact", back_populates="company")
-    user = relationship("User", back_populates="company")
     product = relationship("Product", back_populates="company")
-    type = relationship("Type", back_populates="company")
+    headquarter = relationship("Headquarter", back_populates="company")
+    
+class Headquarter(Base):
+    __tablename__ = "headquarter"
+
+    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    description = Column(String)
+    address = Column(String, nullable=False)
+    active = Column(Boolean, default=True, nullable=False)
+    date = Column(DateTime(timezone=True), server_default=func.now())
+    id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
+
+    company = relationship("Company", back_populates="headquarter")
+    contact = relationship("Contact", back_populates="headquarter")
+    user = relationship("User", back_populates="headquarter")
+    type = relationship("Type", back_populates="headquarter")
 
 
 class Contact(Base):
     __tablename__ = "contact"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
+    id_headquarter = Column(BigInteger, ForeignKey("headquarter.id"), nullable=False)
     number = Column(BigInteger, nullable=False)
     message = Column(String)
     date = Column(DateTime(timezone=True), server_default=func.now())
 
-    company = relationship("Company", back_populates="contact")
+    headquarter = relationship("Headquarter", back_populates="contact")
     
     
 class View(Base):
@@ -52,14 +65,14 @@ class Type(Base):
     __tablename__ = "type"
 
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
+    id_headquarter = Column(BigInteger, ForeignKey("headquarter.id"), nullable=False)
     id_view = Column(BigInteger, ForeignKey("view.id"), nullable=False)
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
     date = Column(DateTime(timezone=True), server_default=func.now())
 
     view = relationship("View", back_populates="type")
-    company = relationship("Company", back_populates="type")
+    headquarter = relationship("Headquarter", back_populates="type")
     product = relationship("Product", back_populates="type")
 
 
@@ -124,10 +137,11 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
+    is_first_login = Column(Boolean)
     active = Column(Boolean, default=True, nullable=False)
     id_profile = Column(BigInteger, ForeignKey("profile.id"), nullable=False)
-    id_company = Column(BigInteger, ForeignKey("company.id"), nullable=False)
+    id_headquarter = Column(BigInteger, ForeignKey("headquarter.id"), nullable=False)
     date = Column(DateTime(timezone=True), server_default=func.now())
 
     profile = relationship("Profile", back_populates="user")
-    company = relationship("Company", back_populates="user")
+    headquarter = relationship("Headquarter", back_populates="user")

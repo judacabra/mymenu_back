@@ -1,15 +1,21 @@
+from datetime import datetime
+
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from app.models.models import Company, Permission, Profile, ProfilePermission, User
 
+from app.schemas.schemas import UserCreate, UserUpdate
+from app.models.models import Company, Headquarter, Permission, Profile, ProfilePermission, User
+from app.services.user.auth_service import AuthService
+from app.utils.config import get_settings
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
+        self.settings = get_settings()
 
 
-    def consult_users_db(self, user_id):
+    def consult_users_db(self, user_id: int):
         try:
             db_user = self.db.query(User, Profile)\
                 .join(Profile, User.id_profile == Profile.id)\
@@ -22,7 +28,7 @@ class UserService:
                 if profile.id == 1:
                     db_users = self.consult_users_by_superadmin()
                 else:
-                    db_users = self.consult_users_by_company(user_id)
+                    db_users = self.consult_users_by_headquarter(user_id)
 
                 return db_users
         
@@ -31,15 +37,16 @@ class UserService:
             print(f"Error getting Users: {e}")
             self.db.rollback()
             return False
-
+    
 
     def consult_users_by_superadmin(self):
         try:
-            db_users = self.db.query(User, Company, Profile)\
-            .join(Company, User.id_company == Company.id)\
+            db_users = self.db.query(User, Headquarter, Profile, Company)\
+            .join(Headquarter, User.id_headquarter == Headquarter.id)\
             .join(Profile, User.id_profile == Profile.id)\
+            .join(Company, Headquarter.id_company == Company.id)\
             .all()
-        
+                    
             if db_users:
                 return [
                     {
@@ -49,10 +56,11 @@ class UserService:
                         "email": user.email,
                         "active": user.active,
                         "profile_name": profile.name,
+                        "headquarter_name": headquarter.name,
                         "company_name": company.name,
                         "date": user.date,
                     }
-                    for user, company, profile in db_users
+                    for user, headquarter, profile, company in db_users
                 ]
         
         except SQLAlchemyError as e:
@@ -61,12 +69,13 @@ class UserService:
             return False
 
 
-    def consult_users_by_company(self, user_id):
+    def consult_users_by_headquarter(self, user_id: int):
         try:
-            db_users = self.db.query(User, Company, Profile)\
-                .join(User, User.id_company == Company.id)\
+            db_users = self.db.query(User, Company, Headquarter, Profile)\
+                .join(User, User.id_headquarter == Headquarter.id)\
+                .join(Company, Company.id == Headquarter.id_company)\
                 .join(Profile, User.id_profile == Profile.id)\
-                .filter(User.id_company == user_id)\
+                .filter(User.id == user_id)\
                 .all()
 
             if db_users:
@@ -81,84 +90,94 @@ class UserService:
                         "company_name": company.name,
                         "date": user.date,
                     }
-                    for user, company, profile in db_users
+                    for user, company, headquarter, profile in db_users
                 ]
 
         except SQLAlchemyError as e:
-            print(f"Error getting Users by company(by user): {e}")
+            print(f"Error getting Users by headquarter (by user): {e}")
             self.db.rollback()
             return False
 
 
-    def get_user_db(self, email: str, username: str = None):
+    def verify_used_user_info(self, email: str, username: str = None):
         try:
             db_user = self.db.query(User).filter(or_(User.username == username, User.email == email)).first()
 
             if db_user:
                 if db_user.username == username:
-                    return {"message": "Username already registered", "id": db_user.id}
+                    return {"message": "El nombre de usuario ya está en uso", "id": db_user.id}
                 elif db_user.email == email:
-                    return {"message": "Email already registered", "id": db_user.id}
+                    return {"message": "El correo ya está en uso", "id": db_user.id}
 
-            return {"message": "Username and email are available", "id": 0}
+            return {"message": "Nombre y correo disponibles", "id": 0}
 
         except SQLAlchemyError as e:
-            print(f"Error getting user: {e}")
+            print(f"Error al obtener el usuario: {e}")
             self.db.rollback()
             return False
 
 
-    def verify_user_state(self, user_id: int):
+    def verify_user_state(self, id: int):
         try:
-            db_user = self.db.query(User).get(user_id)
+            db_user = self.db.query(User).filter(User.id == id).first()
 
             if db_user:
                 if db_user.active:
-                    return "User is already active"
+                    return "Usuario activo"
                 else:
-                    return "User is already inactive"
+                    return "Usuario inactivo"
 
             return False
 
         except SQLAlchemyError as e:
-            print(f"Error verifying user state: {e}")
+            print(f"Error verificando el estado del usuario: {e}")
             self.db.rollback()
             return False
 
 
-    def register_user_db(self, user):
+    def register_user_db(self, user: UserCreate):
         try:
-            self.db.add(user)
-            self.db.commit()
-            self.db.refresh(user)
-            return user
-
-        except SQLAlchemyError as e:
-            print(f"Error adding user: {e}")
-            self.db.rollback()
-            return False
-
-
-    def modify_user_db(self, user: dict):
-        try:
-            db_user = self.db.query(User).get(user.id)
-
-            if not db_user:
-                return False
-
-            for key in [
-                'id_profile', 'active', 'name',
-                'username', 'email', 'password'
-            ]:
-                if getattr(user, key) is not None:
-                    setattr(db_user, key, getattr(user, key))
-
+            db_user = User()
+            
+            db_user.name = user.name
+            db_user.username = user.username
+            db_user.email = user.email
+            db_user.active = user.active            
+            db_user.password = AuthService(db=self.db).hash_password(self.settings.TEMP_PASS)
+            db_user.id_headquarter = 1
+            db_user.id_profile = user.id_profile 
+            db_user.is_first_login = True
+            db_user.date = datetime.now()
+            
+            self.db.add(db_user)
             self.db.commit()
             self.db.refresh(db_user)
-            return db_user
+            
+            return self.get_user_by_id(db_user.id)
 
         except SQLAlchemyError as e:
-            print(f"Error modifying user: {e}")
+            print(f"Error registrando el usuario: {e}")
+            self.db.rollback()
+            return False
+
+
+    def update_user_db(self, id: int, user: UserUpdate):
+        try:
+            db_user = self.db.query(User).filter(User.id == id).first()
+            
+            db_user.name = user.name
+            db_user.username = user.username
+            db_user.email = user.email
+            db_user.active = user.active             
+            db_user.id_headquarter = 1
+            db_user.id_profile = user.id_profile  
+            
+            self.db.commit()
+            
+            return self.get_user_by_id(db_user.id)
+
+        except SQLAlchemyError as e:
+            print(f"Error actualizando el usuario: {e}")
             self.db.rollback()
             return False
 
@@ -187,16 +206,17 @@ class UserService:
             return False
 
 
-    def get_logged_user_db(self, username: str):
+    def get_logged_user_db(self, id: int):
         try:
-            db_user = self.db.query(User, Company, Profile)\
-                .join(Company, User.id_company == Company.id)\
+            db_user = self.db.query(User, Headquarter, Company, Profile)\
+                .join(Headquarter, User.id_headquarter == Headquarter.id)\
+                .join(Company, Headquarter.id_company == Company.id)\
                 .join(Profile, User.id_profile == Profile.id)\
-                .filter(User.username == username)\
+                .filter(User.id == id)\
                 .first()  
 
             if db_user:
-                user, company, profile = db_user
+                user, headquarter, company, profile = db_user
                 db_permissions = self.get_logged_permissions_db(user.id)
 
                 return {
@@ -204,11 +224,42 @@ class UserService:
                     "name": user.name,
                     "email": user.email,
                     "profile_name": profile.name,
+                    "headquarter_name": headquarter.name,
                     "company_name": company.name,
-                    "permissions": db_permissions or []
+                    "permissions": db_permissions,
                 }
 
         except SQLAlchemyError as e:
-            print(f"Error getting logged user info: {e}")
+            print(f"Error obteniendo la información del usuario logueado: {e}")
+            self.db.rollback()
+            return False
+        
+        
+    def get_user_by_id(self, id: int):
+        try:
+            db_user = self.db.query(User, Headquarter, Company, Profile)\
+                .join(Headquarter, User.id_headquarter == Headquarter.id)\
+                .join(Company, Headquarter.id_company == Company.id)\
+                .join(Profile, User.id_profile == Profile.id)\
+                .filter(User.id == id)\
+                .first()  
+
+            if db_user:
+                user, headquarter, company, profile = db_user
+
+                return {
+                    "id": user.id,
+                    "name": user.name,
+                    "username": user.username,
+                    "email": user.email,
+                    "profile_id": profile.id,
+                    "profile_name": profile.name,
+                    "headquarter_name": headquarter.name,
+                    "company_name": company.name,
+                    "active": user.active,
+                }
+
+        except SQLAlchemyError as e:
+            print(f"Error obteniendo la información del usuario logueado: {e}")
             self.db.rollback()
             return False

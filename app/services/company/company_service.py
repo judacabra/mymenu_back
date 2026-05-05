@@ -1,11 +1,10 @@
-import datetime
 import os
 from pathlib import Path
+import unicodedata
 
 from sqlalchemy import desc, func, or_, and_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-import unicodedata
 
 from app.models.models import Company
 
@@ -32,7 +31,6 @@ class CompanyService:
                         "name": company.name,
                         "nit": company.nit,
                         "description": company.description,
-                        "address": company.address,
                         "img": company.img,
                         "active": company.active,
                     }
@@ -69,7 +67,6 @@ class CompanyService:
                     "name": company.name,
                     "nit": company.nit,
                     "description": company.description,
-                    "address": company.address,
                     "img": company.img,
                     "active": company.active,
                 }
@@ -134,7 +131,7 @@ class CompanyService:
         try:
             db_company = Company()
             
-            fields = ['name', 'nit', 'description', 'address', 'date']
+            fields = ['name', 'nit', 'description', 'date', 'active']
 
             for field in fields:
                 if company.get(field):
@@ -142,10 +139,7 @@ class CompanyService:
             
             if company.get('img'):
                 db_company.img = company['img']
-                
-            db_company.active = True
-            db_company.date = datetime.now()
-            
+                            
             self.db.add(db_company)
             self.db.commit()
             self.db.refresh(db_company)
@@ -166,8 +160,7 @@ class CompanyService:
                 exist_company.name = company['name']
                 exist_company.nit = company['nit']
                 exist_company.description = company['description']
-                exist_company.address = company['address']
-                exist_company.date = company['date']
+                exist_company.active = company['active']
                 
                 if company.get('img'):
                     exist_company.img = company['img']
@@ -179,7 +172,6 @@ class CompanyService:
                     "name": exist_company.name,
                     "nit": exist_company.nit,
                     "description": exist_company.description,
-                    "address": exist_company.address,
                     "date": exist_company.date,
                     "active": exist_company.active,
                     "img": exist_company.img,

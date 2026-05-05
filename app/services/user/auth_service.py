@@ -24,25 +24,25 @@ class AuthService:
             user = self.db.query(User).filter(User.username == username).first()
 
             if not user:
-                return {"message": "User not found", "active": False, "password": None, "username": None}
+                return {"message": "Usuario no encontrado", "active": False, "password": None, "username": None}
 
             if not user.active:
-                return {"message": "User is not active", "active": False, "password": None, "username": None}
+                return {"message": "Usuario inactivo", "active": False, "password": None, "username": None}
 
             return {
-                "message": "User found", 
-                "active": True, 
+                "message": "Usuario encontrado", 
+                "active": user.active, 
                 "id": user.id,
                 "password": user.password, 
                 "username": user.username, 
-                "company": user.company,
+                "headquarter": user.headquarter,
                 "profile": user.profile,
-                }
+            }
 
         except SQLAlchemyError as e:
-            print(f"Error verifying user: {e}")
+            print(f"Error verificando usuario: {e}")
             self.db.rollback()
-            return {"message": "Error verifying user", "active": False, "password": None, "username": None}
+            return {"message": "Error verificando usuario", "active": False, "password": None, "username": None}
 
 
     def verify_password(self, plain_password: str, hashed_password: str):
@@ -63,7 +63,7 @@ class AuthService:
             return user_info
 
         if not self.verify_password(password, user_info["password"]):
-            return {"message": "Invalid password"}
+            return {"message": "Contraseña incorrecta"}
 
         return user_info
 
