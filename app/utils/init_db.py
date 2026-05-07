@@ -353,7 +353,6 @@ class DBInitializer:
                 password=hashed_password,
                 id_profile=profile_id,
                 id_headquarter=headquarter_id,
-                is_first_login= False,
                 active=True
             )
 

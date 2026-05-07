@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 
 from fastapi import APIRouter, Depends, Query, Form
@@ -8,11 +9,14 @@ from app.utils.global_functions import global_functions
 
 from app.services.user.user_service import UserService
 from app.schemas.schemas import UserCreate, UserUpdate
+from app.services.user.auth_service import AuthService
+from app.utils.config import get_settings
 
 router = APIRouter()
 
 USERNAME = "Username"
 USER_ID = "ID User"
+settings = get_settings()
 
 @router.get("/users")
 async def users(
@@ -120,5 +124,39 @@ async def update_product(
 
     if not result:
         global_functions.get_exception_details("500", custom_detail="No se pudo actualizar el usuario.")
+
+    return result
+
+@router.put("/user/change-password/{id}")
+async def update_product(
+    id: int,
+    db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
+    data: dict = None
+):
+    """Función utilizada para cambiar la constraseña de un usuario.
+
+    Args:
+        db (SessionLocal): Conexión de la base de datos. Defaults to Depends(get_db).
+        id: int = ID del usuario
+        data: any = Nueva contraseña y confirmacion de contraseña
+
+    Returns:
+        dict: Retorna una bandera, del estado del cambio de contraseña
+    """
+    
+    result = UserService(db).update_password_db(id, data)
+
+    if not result["success"]:
+        global_functions.get_exception_details("400", custom_detail=result["message"])
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = AuthService(db).create_access_token(
+        data={"sub": str(result["user"]["id"])}, 
+        expires_delta=access_token_expires, 
+        secret_key=settings.SECRET_KEY, 
+        algorithm=settings.ALGORITHM
+    )
+
+    result["access_token"] = access_token
 
     return result

@@ -1,7 +1,10 @@
+from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.schemas.schemas import HeadquarterCreate, HeadquarterUpdate
 from app.models.models import Headquarter
 
 class HeadquarterService:
@@ -65,15 +68,16 @@ class HeadquarterService:
             return False     
 
 
-    def register_headquarter_db(self, headquarter: dict):
+    def register_headquarter_db(self, headquarter: HeadquarterCreate):
         try:
             db_headquarter = Headquarter()
             
-            fields = ['id_company', 'name', 'description', 'address', 'date', 'active']
-
-            for field in fields:
-                if headquarter.get(field):
-                    setattr(db_headquarter, field, headquarter[field])
+            db_headquarter.name = headquarter.name
+            db_headquarter.description = headquarter.description
+            db_headquarter.address = headquarter.address
+            db_headquarter.active = headquarter.active
+            db_headquarter.id_company = 1
+            db_headquarter.date = datetime.now()
                                         
             self.db.add(db_headquarter)
             self.db.commit()
@@ -82,12 +86,12 @@ class HeadquarterService:
             return db_headquarter
 
         except SQLAlchemyError as e:
-            print(f"Error adding Headquarters: {e}")
+            print(f"Error registrando la sede: {e}")
             self.db.rollback()
             return False
  
 
-    def update_headquarter_db(self, id: int, headquarter: Headquarter):
+    def update_headquarter_db(self, id: int, headquarter: HeadquarterUpdate):
         try:
             exist_headquarter = self.db.query(Headquarter).filter(Headquarter.id == id).first()
             
@@ -110,7 +114,9 @@ class HeadquarterService:
 
         except SQLAlchemyError as e:
             print(f"Error actualizando la sede: {e}")
+            self.db.rollback()
             return False
+        
 
         try:
             exist_headquarter = self.db.query(Headquarter).filter(Headquarter.id == id).first()

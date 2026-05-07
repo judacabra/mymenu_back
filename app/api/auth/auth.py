@@ -29,8 +29,9 @@ def login(
     """
 
     user = AuthService(db).authenticate_user(username=form_data.username, password=form_data.password)
+        
     if user["message"] != "Usuario encontrado":
-        global_functions.get_exception_details("401", custom_detail="Credenciales incorrectas")
+        global_functions.get_exception_details("401", custom_detail=user["message"])
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = AuthService(db).create_access_token(
@@ -40,4 +41,4 @@ def login(
         algorithm=settings.ALGORITHM
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return { "access_token": access_token, "token_type": "bearer", "user": user }

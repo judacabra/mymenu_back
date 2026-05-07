@@ -1,17 +1,13 @@
 import json
 from datetime import datetime
-import os
-import aiofiles
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
-from typing import Optional
-from pathlib import Path
+from fastapi import APIRouter, Depends, Query
 
 from app.utils.conn import db_manager 
 from app.utils.global_functions import global_functions
 
 from app.services.headquarter.headquarter_service import HeadquarterService
-from app.schemas.schemas import HeadquarterUpdate
+from app.schemas.schemas import HeadquarterCreate, HeadquarterUpdate
 
 ID = "ID Headquarter"
 NAME = "Name Headquarter"
@@ -64,28 +60,44 @@ async def get_headquarter_by_id(
 @router.post("/headquarter")
 async def set_headquarter(
     db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
-    headquarter_data: str = Form(...),
-    img: Optional[UploadFile] = File(None),
+    data: HeadquarterCreate = None
 ):
-    """Función utilizada para registrar una nueva empresa con posibilidad de subir imagen.
+    """Función utilizada para registrar una nueva sede.
 
     Args:
         db: Conexión de la base de datos
-        headquarter_data: Objeto headquarter con los datos a insertar
-        img: Imagen de la empresa (opcional)
+        data: Objeto headquarter con los datos a insertar
 
     Returns:
-        dict: Retorna un diccionario con la información de la empresa creada.
+        dict: Retorna un diccionario con la información de la sede creada.
     """
-        
-    upload_dir = Path("./uploads/headquarter")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    
-    db_headquarter = json.loads(headquarter_data)
-            
-    result = HeadquarterService(db).register_headquarter_db(db_headquarter)
+                                        
+    result = HeadquarterService(db).register_headquarter_db(data)
 
     if not result:
-        global_functions.get_exception_details("500", custom_detail="No created headquarter.")
+        global_functions.get_exception_details("500", custom_detail="No se pudo crear la sede.")
+
+    return result
+
+@router.put("/headquarter/{id}")
+async def set_headquarter(
+    id: int,
+    db: db_manager.session_local = Depends(db_manager.get_db), # type: ignore
+    data: HeadquarterCreate = None
+):
+    """Función utilizada para registrar una nueva sede.
+
+    Args:
+        db: Conexión de la base de datos
+        data: Objeto headquarter con los datos a insertar
+
+    Returns:
+        dict: Retorna un diccionario con la información de la sede creada.
+    """
+                                        
+    result = HeadquarterService(db).update_headquarter_db(id, data)
+
+    if not result:
+        global_functions.get_exception_details("500", custom_detail="No se pudo crear la sede.")
 
     return result

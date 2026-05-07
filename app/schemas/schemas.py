@@ -18,7 +18,6 @@ class CompanyUpdate(BaseModel):
     
     
 class HeadquarterCreate(BaseModel):
-    id_company : int
     name : str
     description : Optional[str] = None
     address : str
@@ -116,6 +115,7 @@ class UserCreate(BaseModel):
     email : str
     active : bool
     id_profile : int
+    id_headquarter : int
 
 
 class UserUpdate(BaseModel):
@@ -124,6 +124,7 @@ class UserUpdate(BaseModel):
     email : Optional[str] = None
     active : Optional[bool] = None
     id_profile : Optional[int] = None
+    id_headquarter : Optional[int] = None
 
 
 class EmailData(BaseModel):

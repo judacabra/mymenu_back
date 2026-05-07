@@ -31,10 +31,12 @@ class AuthService:
 
             return {
                 "message": "Usuario encontrado", 
-                "active": user.active, 
                 "id": user.id,
+                "name": user.name,
+                "active": user.active, 
                 "password": user.password, 
                 "username": user.username, 
+                "isFirstLogin": user.is_first_login,
                 "headquarter": user.headquarter,
                 "profile": user.profile,
             }

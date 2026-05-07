@@ -1,13 +1,14 @@
 from datetime import datetime
-
-from sqlalchemy import desc, or_
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import desc, or_  # type: ignore
+from sqlalchemy.orm import Session # type: ignore
+from sqlalchemy.exc import SQLAlchemyError # type: ignore
 
 from app.schemas.schemas import UserCreate, UserUpdate
 from app.models.models import Company, Headquarter, Permission, Profile, ProfilePermission, User
 from app.services.user.auth_service import AuthService
 from app.utils.config import get_settings
+
+import bcrypt # type: ignore
 
 class UserService:
     def __init__(self, db: Session):
@@ -142,11 +143,16 @@ class UserService:
             db_user.name = user.name
             db_user.username = user.username
             db_user.email = user.email
-            db_user.active = user.active            
+            db_user.active = user.active
             db_user.password = AuthService(db=self.db).hash_password(self.settings.TEMP_PASS)
-            db_user.id_headquarter = 1
+            db_user.id_headquarter = user.id_headquarter
             db_user.id_profile = user.id_profile 
-            db_user.is_first_login = True
+            
+            if user.id_profile == 1:
+                db_user.is_first_login = False
+            else:
+                db_user.is_first_login = True
+                
             db_user.date = datetime.now()
             
             self.db.add(db_user)
@@ -169,7 +175,7 @@ class UserService:
             db_user.username = user.username
             db_user.email = user.email
             db_user.active = user.active             
-            db_user.id_headquarter = 1
+            db_user.id_headquarter = user.id_headquarter
             db_user.id_profile = user.id_profile  
             
             self.db.commit()
@@ -252,14 +258,45 @@ class UserService:
                     "name": user.name,
                     "username": user.username,
                     "email": user.email,
-                    "profile_id": profile.id,
-                    "profile_name": profile.name,
-                    "headquarter_name": headquarter.name,
-                    "company_name": company.name,
+                    "profile": profile,
+                    "headquarter": headquarter,
                     "active": user.active,
                 }
 
         except SQLAlchemyError as e:
             print(f"Error obteniendo la información del usuario logueado: {e}")
+            self.db.rollback()
+            return False
+
+
+    def update_password_db(self, id: int, data: any):
+        try:
+            db_user = self.db.query(User).filter(User.id == id).first()
+            
+            newPass = data["newPass"]
+            confirmPass = data["confirmPass"]
+            
+            if newPass != confirmPass:
+                return { "success": False, "message": "Las contraseñas ingresadas no coinciden" }
+            
+            if not db_user:
+                return { "success": False, "message": f"Usuario con ID {id} no encontrado" }
+                        
+            if bcrypt.checkpw(newPass.encode('utf-8'), db_user.password.encode('utf-8')):
+                return { "success": False, "message": "La nueva contraseña no puede ser igual a la actual" }
+            
+            db_user.password = AuthService(db=self.db).hash_password(newPass)
+            
+            if db_user.is_first_login == True:
+                db_user.is_first_login = False
+            
+            self.db.commit()
+            self.db.refresh(db_user)
+            
+            user_data = self.get_user_by_id(db_user.id)
+            return { "success": True, "message": "Contraseña actualizada", "user": user_data }
+
+        except SQLAlchemyError as e:
+            print(f"Error actualizando la contraseña del usuario: {e}")
             self.db.rollback()
             return False
